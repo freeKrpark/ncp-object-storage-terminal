@@ -95,15 +95,12 @@ func (client *ObjectClient) UploadFiles(bucket, s3Folder, localDir string) (stri
 		chars := []string{"|", "/", "-", "\\"}
 		i := 0
 		for range ticker.C {
-			// 메인 업로드 상태
 			fmt.Printf("\rUploading... %s %d/%d\n", chars[i], uploadedCnt, totalCnt)
 
-			// 각 워커의 상태를 새로운 줄에 표시
 			for workerID := 0; workerID < client.NumWorkers; workerID++ {
 				fmt.Printf("\rWorker#%d: %d files uploaded; now uploading file is %s\n", workerID, workersDo[workerID], uploadingFiles[workerID])
 			}
 
-			// 커서를 다시 위로 올림
 			fmt.Printf("\033[%dA", client.NumWorkers+1)
 
 			i = (i + 1) % len(chars)
