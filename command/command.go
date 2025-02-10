@@ -37,6 +37,23 @@ func (cmd *Command) HandleLS(_ string) (string, bool) {
 	return text, false
 }
 
+func (cmd *Command) HandleHelp(_ string) (string, bool) {
+	return fmt.Sprintf(`
+		"q"            : "Exit Terminal."
+		"exit"         : "Exit Terminal."
+		"ls"           : "List information about the FILES (the current directory by default)."
+		"cd "          : "Change the shell working directory."
+		"use "         : "Set Object Storage Bucket."
+		"set "         : "Set Object Storage Directory."
+		"workers "     : "Set Thread(Goroutine) Workers."
+		"breakpoint "  : "Set Breakpoint for starting uploading."
+		"show buckets" : "Show Object Storage Buckets."
+		"list bucket"  : "List files of Object Storage Bucket. (max : 1000)"
+		"count bucket" : "Count files of Object Storage Bucket."
+		"start upload" : "Upload local files to Object Storage Bucket."
+	`), false
+}
+
 func (cmd *Command) HandleCD(text string) (string, bool) {
 	texts := strings.SplitN(text, "cd ", 2)
 	if len(texts) != 2 {

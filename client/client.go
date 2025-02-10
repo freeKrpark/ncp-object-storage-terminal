@@ -115,9 +115,6 @@ func (client *ObjectClient) UploadFiles(bucket, s3Folder, localDir string) (stri
 		go func(workerID int) {
 			defer wg.Done()
 			for file := range fileChan {
-				if file.IsDir() || filepath.Ext(file.Name()) != ".pdf" {
-					continue
-				}
 				localFilePath := filepath.Join(localDir, file.Name())
 				err := client.upload(bucket, s3Folder, localFilePath, file)
 				if err != nil {
@@ -133,14 +130,16 @@ func (client *ObjectClient) UploadFiles(bucket, s3Folder, localDir string) (stri
 
 	var start bool = false
 	for i, file := range files {
-		if file.IsDir() || filepath.Ext(file.Name()) != ".pdf" {
-			continue
-		}
-
 		if i == client.BreakPoint {
 			start = true
 		}
-
+		if file.IsDir() {
+			continue
+		}
+		ext := filepath.Ext(file.Name())
+		if ext != ".pdf" && ext != ".xml" && ext != ".XML" {
+			continue
+		}
 		if !start {
 			continue
 		}
@@ -154,7 +153,20 @@ func (client *ObjectClient) UploadFiles(bucket, s3Folder, localDir string) (stri
 }
 
 func (client *ObjectClient) upload(bucket, s3Folder, filePath string, file os.DirEntry) error {
-	s3Key := s3Folder + "/" + file.Name()
+	var s3Key string
+	if s3Folder == "" {
+		s3Key = file.Name()
+	} else {
+		s3Key = s3Folder + "/" + file.Name()
+	}
+	contentType := "application/octet-stream"
+	switch filepath.Ext(file.Name()) {
+	case ".pdf":
+		contentType = "application/pdf"
+	case ".xml":
+	case ".XML":
+		contentType = "application/xml"
+	}
 
 	f, err := os.Open(filePath)
 	if err != nil {
@@ -168,7 +180,7 @@ func (client *ObjectClient) upload(bucket, s3Folder, filePath string, file os.Di
 		Bucket:      aws.String(bucket),
 		Key:         aws.String(s3Key),
 		Body:        f,
-		ContentType: aws.String("application/pdf"),
+		ContentType: aws.String(contentType),
 	})
 
 	return err
@@ -191,7 +203,6 @@ func (client *ObjectClient) List(bucket, folder string) (string, error) {
 func (client *ObjectClient) Count(bucket, folder string) (string, error) {
 	contents, err := client.countS3Files(bucket, folder)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 

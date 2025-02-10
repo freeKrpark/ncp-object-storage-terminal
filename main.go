@@ -66,6 +66,7 @@ func query(scanner *bufio.Scanner) (string, bool) {
 		"list bucket":  app.HandleListBucket,
 		"count bucket": app.HandleCountBucket,
 		"start upload": app.HandleStartUpload,
+		"help":         app.HandleHelp,
 	}
 
 	prefixHandlers := map[string]func(string) (string, bool){
